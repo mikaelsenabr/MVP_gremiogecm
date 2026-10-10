@@ -151,7 +151,7 @@ def dado_selecionado(): # Executa ao clicar no Botão
                 label_confirmar_atualizar.configure(text="{} era o(a) {} do Grêmio".format(nome_velho, cargo))                
 
                 nome_novo = campo_dado_novo.get()
-                label_sucesso_atualizado.configure(text="Agora {} é o novo(a) {} do Grêmio".format(nome_novo.title(), cargo.title()))
+                label_sucesso_atualizado.configure(text="Agora {} é o novo(a) {} do Grêmio".format(nome_novo.title(), cargo.title(), text_color="green"))
 
                 cursor.execute("""UPDATE membros SET nome = ? WHERE id = ?""",(nome_novo, id_digitado))
                 conexao.commit()
