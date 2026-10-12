@@ -1,16 +1,8 @@
 from tkinter import *
+from crud import *
 import customtkinter as ctk
-import sqlite3
 
-conexao = sqlite3.connect("gremio.db")
-cursor = conexao.cursor()
 
-cursor.execute("""CREATE TABLE IF NOT EXISTS membros (
-                id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-                nome TEXT NOT NULL,
-                cargo TEXT NOT NULL,
-                idade INTEGER NOT NULL
-                )""")
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
@@ -26,12 +18,11 @@ def atualizar_lista_membros():
         for widget in frame.winfo_children():
             widget.destroy()
         
-        # Busca os dados atualizados no banco
-        cursor.execute("""SELECT * FROM membros""")
-        membros = cursor.fetchall()
+        # Busca os dados atualizados no banco        
+        dados_membros = gerar_lista_membros()
 
         linha = 0
-        for membro in membros:
+        for membro in dados_membros:
             id, nome, cargo, idade = membro
             
             ctk.CTkLabel(frame, text="{}".format(id)).grid(row=linha, column=0, pady=20, padx=20)
@@ -61,16 +52,17 @@ def cadastrar_membro():
     cargo_digitado = campo_cargo.get()
     idade_digitada = campo_idade.get()
 
-    cursor.execute("""INSERT INTO membros 
-                    (nome, cargo, idade) VALUES
-                    (?, ?, ?)""",(nome_digitado,cargo_digitado,idade_digitada))
-    conexao.commit()
+    if nome_digitado and cargo_digitado and idade_digitada:
+        resultado_cadastro.configure(text="{} cadastrado(a) com sucesso!".format(nome_digitado.split()[0]), text_color="green")
+        cadastrar_no_banco(nome_digitado, cargo_digitado, idade_digitada)
 
-    resultado_cadastro.configure(text="{} cadastrado(a) com sucesso!".format(nome_digitado.split()[0]), text_color="green")
+        campo_nome.delete(0, "end")
+        campo_cargo.delete(0, "end")
+        campo_idade.delete(0, "end")
 
-    campo_nome.delete(0, "end")
-    campo_cargo.delete(0, "end")
-    campo_idade.delete(0, "end")
+    else:
+        resultado_cadastro.configure(text="Tente Novamente! Está Faltando Informações!", text_color="red")
+
 
 #titulo = ctk.CTkLabel(janela, text="Login do Grêmio", font=("Roboto", 24, "bold"))
 #titulo.pack(pady=40)
@@ -100,9 +92,6 @@ botao = ctk.CTkButton(tab_1, text="Cadastrar", command=cadastrar_membro, width=3
 botao.pack(pady=10)
 
 # TABELA 2 - MEMBROS CADASTRADOS
-# Loop dos Dados
-
-
 # Cabeçalho fixo
 
 cabecalho = ctk.CTkFrame(tab_2)
@@ -156,12 +145,8 @@ def dado_selecionado(): # Executa ao clicar no Botão
         return
 
     # Busca os dados do membro
-    cursor.execute(
-        "SELECT nome, cargo, idade FROM membros WHERE id = ?",
-        (id_digitado,)
-    )
-
-    membro = cursor.fetchone()
+    membro = buscar_dados(id_digitado)
+    
 
     if membro is None:
         label_confirmar_atualizar.configure(
@@ -217,12 +202,7 @@ def dado_selecionado(): # Executa ao clicar no Botão
     # Atualiza o campo selecionado
     coluna = campos[selecionado]
 
-    cursor.execute(
-        f"UPDATE membros SET {coluna} = ? WHERE id = ?",
-        (dado_novo, id_digitado)
-    )
-
-    conexao.commit()
+    
 
     # Atualiza a interface
     label_confirmar_atualizar.configure(
@@ -234,6 +214,8 @@ def dado_selecionado(): # Executa ao clicar no Botão
         text=mensagem_sucesso,
         text_color="green"
     )
+
+    atualizar_membro(coluna, dado_novo, id_digitado)
 
 
 label_atualizar_id = ctk.CTkLabel(tab_3, text="Digite o ID", font=("Arial", 20))
@@ -277,33 +259,22 @@ label_sucesso_atualizado.pack(pady=10)
 # Buscar dados para confirmação
 def buscar(choice):
     id_deletar = campo_deletar_id.get().lower()
-
-    cursor.execute("""SELECT nome, cargo FROM membros WHERE id = ?""",(id_deletar,))
-    dados = cursor.fetchall()
+    dados = buscar_dados(id_deletar)
 
     if not dados:
         label_confirmar_deletar.configure(text="Membro não encontrado!", text_color="red")
 
     else:
         for d in dados:
-            nome, cargo = d
-            label_confirmar_deletar.configure(text="Deseja deletar {}, {} do Grêmio porque {}?".format(nome, cargo, choice), text_color="white")
+            nome, cargo, idade = d
+            label_confirmar_deletar.configure(text="Deseja deletar {}, \n{} do Grêmio que tem {} anos porque {}?".format(nome, cargo, idade,  choice), text_color="white")
+
             label_sucesso_deletado.configure(text="")
 
 def deletar():
-    id_deletar = campo_deletar_id.get()
-
-    cursor.execute("""SELECT nome, cargo FROM membros WHERE id = ?""",(id_deletar,))
-    dados = cursor.fetchall()
-
-    if not dados:
-        label_sucesso_deletado.configure(text="Por favor, mude o ID!", text_color="red")
-
-    else:
-        cursor.execute("""DELETE FROM membros WHERE id = ?""",(id_deletar,))
-        label_sucesso_deletado.configure(text="Deletado com sucesso!", text_color="green")
-        conexao.commit()
-
+    id_deletar = campo_deletar_id.get().lower()
+    label_sucesso_deletado.configure(text="Usuário(a) deletado(a) com sucesso!!", text_color="green")
+    deletar_membro(id_deletar)
 
 
 label_deletar_id = ctk.CTkLabel(tab_4, text="Digite o ID", font=("Arial", 20))
