@@ -131,65 +131,109 @@ def entrada_opcao(choice): # Executa ao Selecionar no OptionMenu
         campo_dado_novo.configure(placeholder_text="Escolha a nova {}".format(choice))
     else:
         campo_dado_novo.configure(placeholder_text="Escolha o novo {}".format(choice))
-        
-
 
 def dado_selecionado(): # Executa ao clicar no Botão
     selecionado = selecionar_opcao.get().lower()
     id_digitado = campo_atualizar_id.get()
+    dado_novo = campo_dado_novo.get().strip()
 
+    # Mapeia as opções para as colunas permitidas
+    campos = {
+        "nome": "nome",
+        "cargo": "cargo",
+        "idade": "idade"
+    }
+
+    if selecionado not in campos:
+        label_confirmar_atualizar.configure(text="Opção inválida!", text_color="red")
+        return
+
+    if not dado_novo:
+        label_confirmar_atualizar.configure(
+            text="Informe um novo valor!",
+            text_color="red"
+        )
+        return
+
+    # Busca os dados do membro
+    cursor.execute(
+        "SELECT nome, cargo, idade FROM membros WHERE id = ?",
+        (id_digitado,)
+    )
+
+    membro = cursor.fetchone()
+
+    if membro is None:
+        label_confirmar_atualizar.configure(
+            text="Membro não encontrado!",
+            text_color="red"
+        )
+        return
+
+    nome, cargo, idade = membro
+
+    # Prepara as mensagens e valida o valor novo
     if selecionado == "nome":
-        cursor.execute("""SELECT nome, cargo FROM membros WHERE id = ?""",(id_digitado,))
-        nome_atual = cursor.fetchall()
-
-        if not nome_atual:
-            label_confirmar_atualizar.configure(text="Membro não encontrado!", text_color="red")
-
-        else:
-            for n in nome_atual:
-                nome_velho, cargo = n
-                label_confirmar_atualizar.configure(text="{} era o(a) {} do Grêmio".format(nome_velho, cargo))                
-
-                nome_novo = campo_dado_novo.get()
-                label_sucesso_atualizado.configure(text="Agora {} é o novo(a) {} do Grêmio".format(nome_novo.title(), cargo.title(), text_color="green"))
-
-                cursor.execute("""UPDATE membros SET nome = ? WHERE id = ?""",(nome_novo, id_digitado))
-                conexao.commit()
+        mensagem_antiga = (
+            f"{nome} era o(a) {cargo} do Grêmio"
+        )
+        mensagem_sucesso = (
+            f"Agora {dado_novo.title()} é o(a) "
+            f"{cargo.title()} do Grêmio"
+        )
 
     elif selecionado == "cargo":
-        cursor.execute("""SELECT nome, cargo FROM membros WHERE id = ?""",(id_digitado,))
-        cargo_atual = cursor.fetchall()
+        mensagem_antiga = (
+            f"{nome} era o(a) {cargo} do Grêmio"
+        )
+        mensagem_sucesso = (
+            f"Agora {nome.title()} é o(a) "
+            f"{dado_novo.title()} do Grêmio"
+        )
 
-        if not cargo_atual:
-            label_confirmar_atualizar.configure(text="Membro não encontrado!", text_color="red")
+    else:  # idade
+        try:
+            dado_novo = int(dado_novo)
 
-        else:
-            for c in cargo_atual:
-                nome, cargo_velho = c
-                label_confirmar_atualizar.configure(text="{} era o(a) {} do Grêmio".format(nome, cargo_velho))
+            if dado_novo < 0:
+                raise ValueError
 
-                cargo_novo = campo_dado_novo.get()
-                label_sucesso_atualizado.configure(text="Agora {} é o novo(a) {} do Grêmio".format(nome.title(), cargo_novo.title()))
+        except ValueError:
+            label_confirmar_atualizar.configure(
+                text="Informe uma idade válida!",
+                text_color="red"
+            )
+            return
 
-                cursor.execute("""UPDATE membros SET cargo = ? WHERE id = ?""",(cargo_novo, id_digitado))
-                conexao.commit()
+        mensagem_antiga = (
+            f"{nome.title()} é o(a) {cargo.title()} "
+            f"do Grêmio e tinha {idade} anos"
+        )
+        mensagem_sucesso = (
+            f"Agora {nome.title()} tem "
+            f"{dado_novo} anos atualmente"
+        )
 
-    elif selecionado == "idade":
-        cursor.execute("""SELECT nome, cargo, idade FROM membros WHERE id = ?""",(id_digitado,))
-        idade_atual = cursor.fetchall()
+    # Atualiza o campo selecionado
+    coluna = campos[selecionado]
 
-        if not idade_atual:
-            label_confirmar_atualizar.configure(text="Membro não encontrado!", text_color="red")
-        else:
-            for d in idade_atual:
-                nome, cargo, idade_velha = d
-                label_confirmar_atualizar.configure(text="{} é o(a) {} do Grêmio e tinha {} anos".format(nome.title(), cargo.title(), idade_velha))
+    cursor.execute(
+        f"UPDATE membros SET {coluna} = ? WHERE id = ?",
+        (dado_novo, id_digitado)
+    )
 
-                idade_nova = campo_dado_novo.get()
-                label_sucesso_atualizado.configure(text="Agora {}, tem {} anos atualmente".format(nome.title(), idade_nova))
+    conexao.commit()
 
-                cursor.execute("""UPDATE membros SET idade = ? WHERE id = ?""",(idade_nova, id_digitado))
-                conexao.commit()
+    # Atualiza a interface
+    label_confirmar_atualizar.configure(
+        text=mensagem_antiga,
+        text_color="black"
+    )
+
+    label_sucesso_atualizado.configure(
+        text=mensagem_sucesso,
+        text_color="green"
+    )
 
 
 label_atualizar_id = ctk.CTkLabel(tab_3, text="Digite o ID", font=("Arial", 20))
