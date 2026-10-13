@@ -6,6 +6,7 @@ def montar_janela_principal(janela):
 
     janela.geometry("500x550")
     janela.title("Sistema - Grêmio")
+    
 
     # FUNÇÃO PRO TABVIEW
     def atualizar_lista_membros():
@@ -93,11 +94,11 @@ def montar_janela_principal(janela):
     cabecalho = ctk.CTkFrame(tab_2)
     cabecalho.pack(fill="x", padx=20, pady=(10, 0))
 
-    for x in range(1):
-        ctk.CTkLabel(cabecalho, text="ID", font=("Arial", 15)).grid(row=2, column=1, padx=15)
-        ctk.CTkLabel(cabecalho, text="Nome", font=("Arial", 15)).grid(row=2, column=2, padx=60)
-        ctk.CTkLabel(cabecalho, text="Cargo", font=("Arial", 15)).grid(row=2, column=3, padx=50)
-        ctk.CTkLabel(cabecalho, text="Idade", font=("Arial", 15)).grid(row=2, column=4, padx=0)
+    
+    ctk.CTkLabel(cabecalho, text="ID", font=("Arial", 15)).grid(row=2, column=1, padx=15)
+    ctk.CTkLabel(cabecalho, text="Nome", font=("Arial", 15)).grid(row=2, column=2, padx=60)
+    ctk.CTkLabel(cabecalho, text="Cargo", font=("Arial", 15)).grid(row=2, column=3, padx=50)
+    ctk.CTkLabel(cabecalho, text="Idade", font=("Arial", 15)).grid(row=2, column=4, padx=0)
 
     # Criando o Scrollable Frame
     frame = ctk.CTkScrollableFrame(tab_2,
