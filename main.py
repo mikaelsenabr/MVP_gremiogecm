@@ -65,7 +65,7 @@ label_confirmar_login = ctk.CTkLabel(tab_login, text="")
 label_confirmar_login.pack(pady=(10, 0))
 
 # TABELA 2 - REGISTRAR-SE
-
+                                                                                                                                        
 def registrar():
     usuario = campo_registrar_usuario.get()
     senha = campo_registrar_senha.get()
