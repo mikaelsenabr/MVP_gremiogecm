@@ -50,7 +50,7 @@ def montar_janela_principal(janela):
 
         if nome_digitado and cargo_digitado and idade_digitada:
             resultado_cadastro.configure(text="{} cadastrado(a) com sucesso!".format(nome_digitado.split()[0]), text_color="green")
-            cadastrar_no_banco(nome_digitado, cargo_digitado, idade_digitada)
+            cadastrar_membro(nome_digitado, cargo_digitado, idade_digitada)
 
             campo_nome.delete(0, "end")
             campo_cargo.delete(0, "end")
@@ -141,7 +141,7 @@ def montar_janela_principal(janela):
             return
 
         # Busca os dados do membro
-        membro = buscar_dados(id_digitado)
+        membro = buscar_dados_membros(id_digitado)
         
 
         if membro is None:
@@ -255,7 +255,7 @@ def montar_janela_principal(janela):
     # Buscar dados para confirmação
     def buscar(choice):
         id_deletar = campo_deletar_id.get().lower()
-        dados = buscar_dados(id_deletar)
+        dados = buscar_dados_membros(id_deletar)
 
         if not dados:
             label_confirmar_deletar.configure(text="Membro não encontrado!", text_color="red")
